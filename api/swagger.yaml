@@ -1,0 +1,120 @@
+---
+swagger: "2.0"
+info:
+  description: "Authenticate and obtain a token"
+  version: "1.0.0"
+  title: "Simple Authentication API"
+  contact:
+    email: "simon.farrell@colt.net"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "virtserver.swaggerhub.com"
+basePath: "/simonfarrell/authenticate/1.0.0"
+tags:
+- name: "admins"
+  description: "Secured Admin-only calls"
+- name: "developers"
+  description: "Operations available to regular developers"
+schemes:
+- "https"
+paths:
+  /login:
+    post:
+      tags:
+      - "developers"
+      summary: "login with a username and password"
+      description: "returns a signed JWT"
+      operationId: "login"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "login"
+        required: true
+        schema:
+          $ref: "#/definitions/Login"
+      responses:
+        200:
+          description: "a signed JWT"
+          schema:
+            $ref: "#/definitions/Jwt"
+        401:
+          description: "login unsuccessful"
+      x-swagger-router-controller: "Developers"
+  /validate/{token}:
+    get:
+      tags:
+      - "admins"
+      summary: "validates a signed JWToken"
+      description: "Check the token is correctly signed\n"
+      operationId: "validateToken"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "path"
+        description: "the token whose signature will be validated"
+        required: true
+        type: "string"
+        format: "base64"
+      responses:
+        204:
+          description: "signature is valid"
+        400:
+          description: "signature is not valid"
+      x-swagger-router-controller: "Admins"
+  /refresh/{token}:
+    post:
+      tags:
+      - "developers"
+      summary: "refresh an existing JWT"
+      description: "Refresh an unexpired token\n"
+      operationId: "refreshToken"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "path"
+        description: "the existing token"
+        required: true
+        type: "string"
+        format: "base64"
+      responses:
+        200:
+          description: "a signed JWT"
+          schema:
+            $ref: "#/definitions/Jwt"
+        401:
+          description: "login unsuccessful"
+      x-swagger-router-controller: "Developers"
+definitions:
+  Login:
+    type: "object"
+    required:
+    - "name"
+    - "password"
+    properties:
+      name:
+        type: "string"
+      password:
+        type: "string"
+    example:
+      password: "password"
+      name: "name"
+  Jwt:
+    type: "object"
+    properties:
+      expires:
+        type: "string"
+        format: "date-time"
+      token:
+        type: "string"
+        format: "base64"
+    example:
+      expires: "2000-01-23T04:56:07.000+00:00"
+      token: "token"
